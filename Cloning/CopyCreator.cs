@@ -1,5 +1,7 @@
 ﻿namespace DeepCloneUtility.Cloning;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,9 +14,63 @@ using System.Text.Json;
 /// </summary>
 public static class CopyCreator
 {
-    public static T? DeepCloneViaJson<T>(this T obj)
+    /// <summary>
+    /// Deep clone an object using Newtonsoft.Json, including read-only properties.
+    /// </summary>
+    public static T? DeepCloneViaNsJson<T>(this T? obj)
     {
-        var json = JsonSerializer.Serialize(obj, typeof(T), new JsonSerializerOptions
+        if (obj == null)
+            return default!;
+
+        var settings = new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.Auto,
+            ObjectCreationHandling = ObjectCreationHandling.Replace,
+            ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+            ContractResolver = new IncludeReadOnlyResolver
+            {
+                NamingStrategy = new CamelCaseNamingStrategy()
+            }
+        };
+
+        var json = JsonConvert.SerializeObject(obj, settings);
+        return JsonConvert.DeserializeObject<T>(json, settings)!;
+    }
+
+    /// <summary>
+    /// Custom resolver that includes read-only properties and private fields.
+    /// </summary>
+    private class IncludeReadOnlyResolver : DefaultContractResolver
+    {
+        protected override Newtonsoft.Json.Serialization.JsonProperty CreateProperty(
+            System.Reflection.MemberInfo member, 
+            MemberSerialization memberSerialization)
+        {
+            var prop = base.CreateProperty(member, memberSerialization);
+
+            // Include read-only properties
+            if (!prop.Writable)
+            {
+                var property = member as System.Reflection.PropertyInfo;
+                if (property?.GetSetMethod(true) != null)
+                    prop.Writable = true;
+            }
+
+            // Include private fields if needed
+            if (!prop.Readable)
+            {
+                var field = member as System.Reflection.FieldInfo;
+                if (field != null)
+                    prop.Readable = true;
+            }
+
+            return prop;
+        }
+    }
+
+    public static T? DeepCloneViaMsJson<T>(this T obj)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(obj, typeof(T), new JsonSerializerOptions
         {
             IgnoreReadOnlyFields = false,
             IgnoreReadOnlyProperties = false,
@@ -22,7 +78,7 @@ public static class CopyCreator
             MaxDepth = 64,
             NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.Strict
         });
-        return JsonSerializer.Deserialize<T>(json)!;
+        return System.Text.Json.JsonSerializer.Deserialize<T>(json)!;
     }
 
     /// <summary>
@@ -34,25 +90,33 @@ public static class CopyCreator
     public static T? DeepClone<T>(this T? source)
     {
         if (source == null)
+        {
             return default;
+        }
 
         var visited = new Dictionary<object, object>(ReferenceEqualityComparer.Instance);
-        return (T)CloneInternal(source!, visited);
+        return (T?)CloneInternal(source!, visited);
     }
 
     private static object? CloneInternal(object? source, IDictionary<object, object> visited)
     {
         if (source is null)
+        {
             return null;
+        }
 
         var type = source.GetType();
 
         // Immutable or primitive types
         if (type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal))
+        {
             return source;
+        }
 
         if (visited.TryGetValue(source, out var existing))
+        {
             return existing;
+        }
 
         // Arrays
         if (type.IsArray)
@@ -63,7 +127,9 @@ public static class CopyCreator
             visited[source] = clone;
 
             for (int i = 0; i < array.Length; i++)
+            {
                 clone.SetValue(CloneInternal(array.GetValue(i), visited), i);
+            }
 
             return clone;
         }
@@ -74,7 +140,10 @@ public static class CopyCreator
             var listClone = (IList)Activator.CreateInstance(type)!;
             visited[source] = listClone;
             foreach (var item in (IList)source)
+            {
                 listClone.Add(CloneInternal(item, visited));
+            }
+
             return listClone;
         }
 
@@ -84,7 +153,10 @@ public static class CopyCreator
             var dictClone = (IDictionary)Activator.CreateInstance(type)!;
             visited[source] = dictClone;
             foreach (DictionaryEntry entry in (IDictionary)source)
+            {
                 dictClone.Add(CloneInternal(entry.Key, visited), CloneInternal(entry.Value, visited));
+            }
+            
             return dictClone;
         }
 

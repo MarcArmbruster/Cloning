@@ -19,6 +19,8 @@ public class Parcel
 
     public string Name { get; }
     public int Weight { get; set; }
+    internal decimal Value { get; set; }
 
     public List<Parcel> Children { get; } = [];
+    public Dictionary<string, object> Metadata { get; } = [];
 }
