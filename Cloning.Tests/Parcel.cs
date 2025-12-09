@@ -2,18 +2,19 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 public class Parcel
 {
-    public Parcel()
+    public Parcel() : this(string.Empty)
     {
     }
 
     public Parcel(string name)
     {
-        Name = name;
+        this.Name = name;
     }
+
+    public NoDefCtor? NoDefCtorProp { get; set; }
 
     public Guid Id { get; set; }
 

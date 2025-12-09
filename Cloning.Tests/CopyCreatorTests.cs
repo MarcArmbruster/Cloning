@@ -6,32 +6,19 @@ using DeepCloneUtility.Cloning;
 public sealed class CopyCreatorTests
 {
     [TestMethod]
-    public void CloneViaMsJsonTest()
-    {
-        Parcel parcel = CreateTestObject();
-
-        var clone = parcel.DeepCloneViaMsJson();
-
-        CheckClone(parcel, clone);
-    }
-
-    [TestMethod]
-    public void CloneViaNsJsonTest()
-    {
-        Parcel parcel = CreateTestObject();
-
-        var clone = parcel.DeepCloneViaNsJson();
-
-        CheckClone(parcel, clone);
-    }
-
-    [TestMethod]
     public void PropertyBasedCloneTest()
     {
+        // Arrange
         Parcel parcel = CreateTestObject();
+        
+        // Act
+        Parcel? clone = DeepClone<Parcel>
+                        .Builder()
+                        .WithSourceInstance(parcel)
+                        .UseCtorParameters(typeof(NoDefCtor), [1,"test"])
+                        .CreateClone();
 
-        var clone = parcel.DeepClone();
-
+        // Assert
         CheckClone(parcel, clone);
     }
 
@@ -58,16 +45,19 @@ public sealed class CopyCreatorTests
             Weight = 2
         });
 
+        parcel.NoDefCtorProp = new NoDefCtor(4711, "FancyTestString");
+
         return parcel;
     }
 
     private static void CheckClone(Parcel parcel, Parcel? clone)
     {
+        Assert.IsNotNull(clone);
         Assert.AreEqual(parcel.Id, clone.Id);
         Assert.AreEqual(parcel.Name, clone.Name);
         Assert.AreEqual(parcel.Weight, clone.Weight);
         Assert.AreEqual(99.99m, clone.Value);
-        Assert.AreEqual(parcel.Children.Count, clone.Children.Count);
+        Assert.HasCount(parcel.Children.Count, clone.Children);
         Assert.AreEqual("Value1", parcel.Metadata["Key1"]);
         Assert.AreEqual("Value2", parcel.Metadata["Key2"]);
 
@@ -78,5 +68,8 @@ public sealed class CopyCreatorTests
         Assert.AreEqual(parcel.Children[1].Id, clone.Children[1].Id);
         Assert.AreEqual(parcel.Children[1].Name, clone.Children[1].Name);
         Assert.AreEqual(parcel.Children[1].Weight, clone.Children[1].Weight);
+
+        Assert.AreEqual(parcel.NoDefCtorProp?.Count, clone.NoDefCtorProp?.Count);
+        Assert.AreEqual(parcel.NoDefCtorProp?.Text, clone.NoDefCtorProp?.Text);
     }
 }
