@@ -45,6 +45,10 @@ public sealed class CopyCreatorTests
             Weight = 2
         });
 
+        parcel.Notes.Add("Note1");
+        parcel.Notes.Add("Note2");
+        parcel.Notes.Add("Note3");
+
         parcel.NoDefCtorProp = new NoDefCtor(4711, "FancyTestString");
 
         return parcel;
@@ -68,6 +72,9 @@ public sealed class CopyCreatorTests
         Assert.AreEqual(parcel.Children[1].Id, clone.Children[1].Id);
         Assert.AreEqual(parcel.Children[1].Name, clone.Children[1].Name);
         Assert.AreEqual(parcel.Children[1].Weight, clone.Children[1].Weight);
+
+        Assert.HasCount(3, parcel.Notes);
+        CollectionAssert.AreEquivalent(parcel.Notes, clone.Notes);
 
         Assert.AreEqual(parcel.NoDefCtorProp?.Count, clone.NoDefCtorProp?.Count);
         Assert.AreEqual(parcel.NoDefCtorProp?.Text, clone.NoDefCtorProp?.Text);

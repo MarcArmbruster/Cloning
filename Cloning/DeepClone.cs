@@ -3,6 +3,7 @@
 using global::Cloning.Extensions;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -54,7 +55,15 @@ public class DeepClone<T> //where T : class
         }
 
         var alreadyCloned = new Dictionary<object, object>(ReferenceEqualityComparer.Instance);
-        return (T?)this.CloneInternal(this.sourceInstance, alreadyCloned);
+        try
+        {
+            var clone = (T?)this.CloneInternal(this.sourceInstance, alreadyCloned);
+            return clone;
+        }
+        catch (MissingMethodException mmEx)
+        {
+            throw;
+        }
     }
 
     private object? CloneInternal(object? source, IDictionary<object, object> visited)
@@ -110,6 +119,25 @@ public class DeepClone<T> //where T : class
             return listClone;
         }
 
+        // ConcurrentBag<T> (e.g. ConcurrentBag<string>)
+        if (type.IsGenericType &&
+           type.GetGenericTypeDefinition() == typeof(ConcurrentBag<>))
+        {
+            var concurrentBagType = typeof(ConcurrentBag<>).MakeGenericType(type.GenericTypeArguments.First());
+            var bagClone = (ICollection)Activator.CreateInstance(concurrentBagType);
+
+            // Add an item to the ConcurrentBag
+            MethodInfo addMethod = concurrentBagType.GetMethod("Add");
+            
+            visited[source] = bagClone;
+            foreach (var item in source as IEnumerable)
+            {
+                addMethod?.Invoke(bagClone, [item]);
+            }
+
+            return bagClone;
+        }
+
         // IDictionary (e.g. Dictionary<K,V>)
         if (typeof(IDictionary).IsAssignableFrom(type))
         {
@@ -144,13 +172,20 @@ public class DeepClone<T> //where T : class
             else
             {
                 var defaultValues = GetDefaultValue(type);
-                object?[] initParamValues = new object[paramTypes.Length];
-                for (int i = 0; i < paramTypes.Length; i++)
+                if (defaultValues == null || defaultValues.Length != paramTypes.Count())
                 {
-                    var paramType = paramTypes[i].ParameterType;
-                    initParamValues[i] = defaultValues[i];
+                    cloneObj = Activator.CreateInstance(type);
                 }
-                cloneObj = Activator.CreateInstance(type, initParamValues)!;
+                else
+                {
+                    object?[] initParamValues = new object[paramTypes.Length];
+                    for (int i = 0; i < paramTypes.Length; i++)
+                    {
+                        var paramType = paramTypes[i].ParameterType;
+                        initParamValues[i] = defaultValues[i];
+                    }
+                    cloneObj = Activator.CreateInstance(type, initParamValues)!;
+                }
             }
         }
 

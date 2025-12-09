@@ -1,6 +1,7 @@
 ﻿namespace Cloning.Tests;
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 public class Parcel
@@ -24,4 +25,6 @@ public class Parcel
 
     public List<Parcel> Children { get; } = [];
     public Dictionary<string, object> Metadata { get; } = [];
+
+    public ConcurrentBag<string> Notes { get; } = new();
 }
