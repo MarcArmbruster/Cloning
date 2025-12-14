@@ -66,6 +66,8 @@ public class DeepClone<T> //where T : class
         }
     }
 
+    
+
     private object? CloneInternal(object? source, IDictionary<object, object> visited)
     {
         if (source is null)
@@ -76,17 +78,14 @@ public class DeepClone<T> //where T : class
         var type = source.GetType(); 
 
         // Immutable or primitive types
-        if (type.IsPrimitive 
-            || type.IsEnum 
-            || type == typeof(string) 
-            || type == typeof(decimal))
+        if (TryClonePrimitiveTypes(type, source, out var primitiveClone))
         {
             return source;
         }
 
+        // Skip already cloned objects to handle cyclic references
         if (visited.TryGetValue(source, out var existing))
         {
-            // Skip already cloned objects to handle cyclic references
             return existing;
         }
 
@@ -198,6 +197,21 @@ public class DeepClone<T> //where T : class
         }
 
         return cloneObj;
+    }
+
+    private static bool TryClonePrimitiveTypes(Type type, object? source, out object? clone)
+    {
+        if (type.IsPrimitive
+            || type.IsEnum
+            || type == typeof(string)
+            || type == typeof(decimal))
+        {
+            clone = source;
+            return true;
+        }
+
+        clone = null;
+        return false;
     }
 
     private object?[] GetDefaultValue(Type propertyType)

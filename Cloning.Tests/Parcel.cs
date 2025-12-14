@@ -15,6 +15,8 @@ public class Parcel
         this.Name = name;
     }
 
+    internal PrimitveDetails PrimitveDetails { get; set; } = new();
+
     public NoDefCtor? NoDefCtorProp { get; set; }
 
     public Guid Id { get; set; }
