@@ -12,10 +12,17 @@ public sealed class CopyCreatorTests
         Parcel parcel = CreateTestObject();
         
         // Act
-        Parcel? clone = DeepClone<Parcel>
+        var clone = DeepClone<Parcel>
                         .Builder()
                         .WithSourceInstance(parcel)
                         .UseCtorParameters(typeof(NoDefCtor), [1,"test"])
+                        .UseCustomLogic(
+                            typeof(BoringCustomType), 
+                            new Func<object?, object?>((source) => new BoringCustomType
+                            {
+                                ID = Guid.NewGuid(),
+                                Name = ((BoringCustomType?)source)?.Name ?? string.Empty
+                            }))
                         .CreateClone();
 
         // Assert
@@ -50,6 +57,12 @@ public sealed class CopyCreatorTests
         parcel.Notes.Add("Note3");
 
         parcel.NoDefCtorProp = new NoDefCtor(4711, "FancyTestString");
+
+        parcel.Boring = new BoringCustomType
+        {
+            ID = Guid.NewGuid(),
+            Name = "BoringName"
+        };
 
         parcel.PrimitveDetails = new PrimitveDetails
         {
@@ -101,6 +114,10 @@ public sealed class CopyCreatorTests
 
         Assert.AreEqual(parcel.NoDefCtorProp?.Count, clone.NoDefCtorProp?.Count);
         Assert.AreEqual(parcel.NoDefCtorProp?.Text, clone.NoDefCtorProp?.Text);
+
+        Assert.IsFalse(object.ReferenceEquals(parcel.Boring, clone.Boring));
+        Assert.AreNotEqual(parcel.Boring.ID, clone.Boring.ID); // ID is regenerated in custom clone logic
+        Assert.AreEqual(parcel.Boring.Name, clone.Boring.Name);
 
         Assert.IsFalse(object.ReferenceEquals(parcel.PrimitveDetails, clone.PrimitveDetails));
         Assert.AreEqual(parcel.PrimitveDetails.BoolValue, clone.PrimitveDetails.BoolValue);

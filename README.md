@@ -10,6 +10,9 @@ Therefore you should not use it in productive systems unless a stable version is
 
 Marc Armbruster, 14-Dec-2025
 
+## Licence
+--> to be defined
+
 ## Overview
 This library provides functionality for deep cloning of complex types in C#. It supports a variety of data types including primitive types, arrays, lists, dictionaries, and custom objects. The deep cloning process ensures that all nested objects are also cloned, preventing any references to the original objects.
 
@@ -20,34 +23,47 @@ The entire logic is based on reflection and expression trees to achieve high per
 
 ```C#
 
-// Example: cloning an object of a custom 'Parcel' type with a complex substructure
-Parcel? clone = DeepClone<Parcel>
-                        .Builder()
-                        .WithSourceInstance(parcel)
-                        .UseCtorParameters(typeof(NoDefCtor), [1,"test"])
-                        .CreateClone();
+// Example: cloning an object of a custom 'Parcel' type 
+// with a complex substructure
+var clone = DeepClone<Parcel>
+                .Builder()
+                .WithSourceInstance(parcel)
+                .UseCtorParameters(typeof(NoDefCtor), [1,"test"])
+                .UseCustomLogic(
+                    typeof(BoringCustomType), 
+                    new Func<object?, object?>((source) => new BoringCustomType
+                    {
+                        ID = Guid.NewGuid(),
+                        Name = ((BoringCustomType?)source)?.Name ?? string.Empty
+                    }))
+                .CreateClone();
 
 ```
 
-## Challenges
+## Challenges/Features
 To create a deep clone of complex types, several challenges need to be addressed:
-- Avoid circular references
-- Setter only properties
-- Init only properties
-- Collection types
-- Concurrent types
-- Readonly fields
-- Types without default constructors
+- Avoid circular references [included]
+- Setter only properties [included]
+- Init only properties [included]
+- Collection types [partially included]
+- Concurrent types [partially included]
+- Readonly fields [included]
+- Types without default constructors [included by parameter registration]
+- Individual/custom logic for special types [included]
 - ...
 
 ## Limitations
 - Does not support all concurrent collections, yet.
-- 
+- Still missing some test scenarios
+
+## Handling types without default constructor
+Creation of clone instances need to call a constructor.
+
 
 ## Supported Types
 |Type|supported|
 |---|---|
-|Custom Objects|yes (depending on sub types - see below)|
+|Custom Objects (classes)|yes (depending on sub types - see below)|
 |bool|yes|
 |byte|yes|
 |sbyte|yes|

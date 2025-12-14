@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -17,6 +18,8 @@ public class DeepClone<T> //where T : class
 {
     private T? sourceInstance;
     private Dictionary<Type, object[]> ctorParameters = [];
+
+    private Dictionary<Type, Func<object?, object?>> customLogic = [];
 
     private DeepClone()
     {
@@ -35,6 +38,18 @@ public class DeepClone<T> //where T : class
         return this;
     }
 
+    [DebuggerStepThrough]
+    public DeepClone<T> UseCustomLogic(Type type, Func<object?, object?> individualCloneLogic)
+    {
+        if (individualCloneLogic != null)
+        {
+            customLogic[type] = individualCloneLogic;
+        }
+
+        return this;
+    }
+
+    [DebuggerStepThrough]
     public DeepClone<T> UseCtorParameters(Type parameterType, object[] parameterDefaultValues)
     {
         this.ctorParameters[parameterType] = parameterDefaultValues;
@@ -60,13 +75,11 @@ public class DeepClone<T> //where T : class
             var clone = (T?)this.CloneInternal(this.sourceInstance, alreadyCloned);
             return clone;
         }
-        catch (MissingMethodException mmEx)
+        catch (MissingMethodException)
         {
             throw;
         }
     }
-
-    
 
     private object? CloneInternal(object? source, IDictionary<object, object> visited)
     {
@@ -75,7 +88,10 @@ public class DeepClone<T> //where T : class
             return null;
         }
 
-        var type = source.GetType(); 
+        var type = source.GetType();
+
+        // use custom logic if provided
+        if (TryUseCostomLogic(type, source, visited, out var custClone)) return custClone;
 
         // Immutable or primitive types
         if (TryClonePrimitiveTypes(type, source, out var primitiveClone))
@@ -90,22 +106,86 @@ public class DeepClone<T> //where T : class
         }
 
         // Arrays
-        if (type.IsArray)
+        if (TryCloneArrays(type, source, visited, out var arrayClone)) return arrayClone;
+
+        // IList (e.g. List<T>)
+        if (TryCloneList(type, source, visited, out var listClone)) return listClone;
+
+        // ConcurrentBag<T> (e.g. ConcurrentBag<string>)
+        if (TryCloneConcurrentBag(type, source, visited, out var bagClone)) return bagClone;
+
+        // IDictionary (e.g. Dictionary<K,V>)
+        if (TryCloneDictionary(type, source, visited, out var dictClone)) return dictClone;
+
+        // Complex types
+        if (TryCloneComplexObject(type, source, visited, out var objClone)) return objClone;
+        
+        throw new NotSupportedException($"Type '{type.FullName}' is not supported for deep cloning.");        
+    }
+
+    private bool TryUseCostomLogic(Type type, object? source, IDictionary<object, object> visited, out object? clone)
+    {
+        if (customLogic.TryGetValue(type, out var cloneLogic))
+        {
+            object? customClone = cloneLogic.Invoke(source);
+            if (customClone != null && source != null)
+            {
+                visited[source] = customClone;
+            }
+
+            clone = customClone;
+            return true;
+        }
+
+        clone = default(T);
+        return false;
+    }
+
+    private bool TryClonePrimitiveTypes(Type type, object? source, out object? clone)
+    {
+        if (type.IsPrimitive
+            || type.IsEnum
+            || type == typeof(string)
+            || type == typeof(decimal))
+        {
+            clone = source;
+            return true;
+        }
+
+        clone = null;
+        return false;
+    }
+
+    private bool TryCloneArrays(Type type, object? source, IDictionary<object, object> visited, out object? clone)
+    {
+        if (type.IsArray && source != null)
         {
             var array = (Array)source;
             var elementType = type.GetElementType()!;
-            var clone = Array.CreateInstance(elementType, array.Length);
-            visited[source] = clone;
+            var localClone = Array.CreateInstance(elementType, array.Length);
+            visited[source] = localClone;
 
             for (int i = 0; i < array.Length; i++)
             {
-                clone.SetValue(CloneInternal(array.GetValue(i), visited), i);
+                localClone.SetValue(CloneInternal(array.GetValue(i), visited), i);
             }
 
-            return clone;
+            clone = localClone;
+            return true;
         }
 
-        // IList (e.g. List<T>)
+        clone = null;
+        return false;
+    }
+
+    private bool TryCloneList(Type type, object? source, IDictionary<object, object> visited, out object? clone)
+    {
+        if (source == null)
+        {
+            clone = null;
+            return true; 
+        }
+
         if (typeof(IList).IsAssignableFrom(type))
         {
             var listClone = (IList)Activator.CreateInstance(type)!;
@@ -115,29 +195,22 @@ public class DeepClone<T> //where T : class
                 listClone.Add(CloneInternal(item, visited));
             }
 
-            return listClone;
+            clone = listClone;
+            return true;
         }
 
-        // ConcurrentBag<T> (e.g. ConcurrentBag<string>)
-        if (type.IsGenericType &&
-           type.GetGenericTypeDefinition() == typeof(ConcurrentBag<>))
+        clone = null;
+        return false;
+    }
+
+    private bool TryCloneDictionary(Type type, object? source, IDictionary<object, object> visited, out object? clone)
+    {
+        if (source == null)
         {
-            var concurrentBagType = typeof(ConcurrentBag<>).MakeGenericType(type.GenericTypeArguments.First());
-            var bagClone = (ICollection)Activator.CreateInstance(concurrentBagType);
-
-            // Add an item to the ConcurrentBag
-            MethodInfo addMethod = concurrentBagType.GetMethod("Add");
-            
-            visited[source] = bagClone;
-            foreach (var item in source as IEnumerable)
-            {
-                addMethod?.Invoke(bagClone, [item]);
-            }
-
-            return bagClone;
+            clone = null;
+            return true;
         }
 
-        // IDictionary (e.g. Dictionary<K,V>)
         if (typeof(IDictionary).IsAssignableFrom(type))
         {
             var dictClone = (IDictionary)Activator.CreateInstance(type)!;
@@ -150,16 +223,59 @@ public class DeepClone<T> //where T : class
                     dictClone.Add(clonedKey, CloneInternal(entry.Value, visited));
                 }
             }
-            
-            return dictClone;
+
+            clone = dictClone;
+            return true;
         }
 
-        // Complex types
+        clone = null;
+        return false;
+    }
+
+    private bool TryCloneConcurrentBag(Type type, object? source, IDictionary<object, object> visited, out object? clone)
+    {
+        if (source == null)
+        {
+            clone = null;
+            return true;
+        }
+
+        if (type.IsGenericType &&
+           type.GetGenericTypeDefinition() == typeof(ConcurrentBag<>))
+        {
+            var concurrentBagType = typeof(ConcurrentBag<>).MakeGenericType(type.GenericTypeArguments.First());
+            var bagClone = (ICollection)Activator.CreateInstance(concurrentBagType);
+
+            // Add an item to the ConcurrentBag
+            MethodInfo addMethod = concurrentBagType.GetMethod("Add");
+
+            visited[source] = bagClone;
+            foreach (var item in source as IEnumerable)
+            {
+                addMethod?.Invoke(bagClone, [item]);
+            }
+
+            clone = bagClone;
+            return true;
+        }
+
+        clone = null;
+        return false;
+    }
+
+    private bool TryCloneComplexObject(Type type, object? source, IDictionary<object, object> visited, out object? clone)
+    {
+        if (source == null)
+        {
+            clone = null;
+            return true;
+        }
+
         object? cloneObj;
         if (type.IsValueType || type.HasDefaultConstructor())
         {
             // Types with default (parameterless constructors)
-            cloneObj = Activator.CreateInstance(type)!;            
+            cloneObj = Activator.CreateInstance(type)!;
         }
         else
         {
@@ -188,7 +304,11 @@ public class DeepClone<T> //where T : class
             }
         }
 
-        visited[source] = cloneObj;
+        if (cloneObj != null)
+        {
+            visited[source] = cloneObj;
+        }
+            
         foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
         {
             var value = field.GetValue(source);
@@ -196,22 +316,8 @@ public class DeepClone<T> //where T : class
             field.SetValue(cloneObj, clonedValue);
         }
 
-        return cloneObj;
-    }
-
-    private static bool TryClonePrimitiveTypes(Type type, object? source, out object? clone)
-    {
-        if (type.IsPrimitive
-            || type.IsEnum
-            || type == typeof(string)
-            || type == typeof(decimal))
-        {
-            clone = source;
-            return true;
-        }
-
-        clone = null;
-        return false;
+        clone = cloneObj;
+        return true;
     }
 
     private object?[] GetDefaultValue(Type propertyType)
@@ -220,7 +326,8 @@ public class DeepClone<T> //where T : class
         {
             return defaultValues;
         }
-        return default;
+
+        return [default];
     }
 
     private sealed class ReferenceEqualityComparer : IEqualityComparer<object>

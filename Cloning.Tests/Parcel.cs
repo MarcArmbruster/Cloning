@@ -15,6 +15,7 @@ public class Parcel
         this.Name = name;
     }
 
+    public BoringCustomType Boring { get; set; }
     internal PrimitveDetails PrimitveDetails { get; set; } = new();
 
     public NoDefCtor? NoDefCtorProp { get; set; }
