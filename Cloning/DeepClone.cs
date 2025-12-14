@@ -244,15 +244,25 @@ public class DeepClone<T> //where T : class
            type.GetGenericTypeDefinition() == typeof(ConcurrentBag<>))
         {
             var concurrentBagType = typeof(ConcurrentBag<>).MakeGenericType(type.GenericTypeArguments.First());
-            var bagClone = (ICollection)Activator.CreateInstance(concurrentBagType);
+            var bagClone = (ICollection?)Activator.CreateInstance(concurrentBagType);
 
             // Add an item to the ConcurrentBag
-            MethodInfo addMethod = concurrentBagType.GetMethod("Add");
+            MethodInfo? addMethod = concurrentBagType.GetMethod("Add");
 
-            visited[source] = bagClone;
-            foreach (var item in source as IEnumerable)
+            if (bagClone != null)
             {
-                addMethod?.Invoke(bagClone, [item]);
+                visited[source] = bagClone;
+            }
+
+            if (source is IEnumerable enumerable)
+            {
+                foreach (var item in enumerable)
+                {
+                    if (item != null)
+                    {
+                        addMethod?.Invoke(bagClone, [item]);
+                    }
+                }
             }
 
             clone = bagClone;
@@ -311,8 +321,8 @@ public class DeepClone<T> //where T : class
             
         foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
         {
-            var value = field.GetValue(source);
-            var clonedValue = CloneInternal(value, visited);
+            var fieldValue = field.GetValue(source);
+            var clonedValue = CloneInternal(fieldValue, visited);
             field.SetValue(cloneObj, clonedValue);
         }
 
