@@ -39,12 +39,18 @@ var clone = DeepClone<Parcel>
                 .CreateClone();
 
 ```
+The Methods:
+- .Builder() --> provides a new builder instance [required]
+- .WithSourceInstance(...) --> sets the source instance to be cloned [required]
+- .UseCtorParameters(...) --> provides parameters for types without default constructor [optional]
+- .UseCustomLogic(...) --> provides custom logic for special types [optional]
+- .CreateClone() --> performs the deep clone and returns the cloned instance [required]
 
 ## Challenges/Features
 To create a deep clone of complex types, several challenges need to be addressed:
 - Avoid circular references [included]
-- Setter only properties [included]
-- Init only properties [included]
+- Handle setter only properties [included]
+- Handle init only properties [included]
 - Collection types [partially included]
 - Concurrent types [partially included]
 - Readonly fields [included]
@@ -53,14 +59,22 @@ To create a deep clone of complex types, several challenges need to be addressed
 - ...
 
 ## Limitations
-- Does not support all concurrent collections, yet.
+- Does actually not support all concurrent collections.
 - Still missing some test scenarios
 
 ## Handling types without default constructor
 Creation of clone instances need to call a constructor.
+Classes without a parameterless constructor need to provide parameters for a specific constructor.
+This can be done by calling the method .UseCtorParameters(...) on the builder instance.
+Provide any constructor parameters that are required for the specific type.
+The values will be overwritten during the cloning process, anyway.
 
+## Custom Logic
+If you like to use special/custom handling during the cloning process for defined types use the method
+.UseCustomLogic(...) on the builder instance.
+Here you can provide a Func<object?, object?> delegate that will be called during the cloning process for the defined type.
 
-## Supported Types
+## Supported Types (Dec-2025)
 |Type|supported|
 |---|---|
 |Custom Objects (classes)|yes (depending on sub types - see below)|
@@ -87,16 +101,16 @@ Creation of clone instances need to call a constructor.
 |Array|yes|
 |List<>|yes|
 |Dictionary<,>|yes|
-|HashSet<>|work in process|
+|HashSet<>|yes|
 |Queue<>|planned|
-|Stack<>|work in process|
+|Stack<>|yes|
 |LinkedList<>|planned|
 |Structs|yes|
 |Nullable<>|yes|
-|Tuple<>|work in process|
-|ValueTuple<>|planned|
-|ConcurrentBag<>|partially|
-|ConcurrentDictionary<,>|partially|
+|Tuple<>|yes|
+|ValueTuple<>|yes|
+|ConcurrentBag<>|yes|
+|ConcurrentDictionary<,>|yes|
 |ConcurrentQueue<>|partially|
 |ConcurrentStack<>|partially|
 |Immutable Collections|no|

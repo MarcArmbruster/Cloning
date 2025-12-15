@@ -15,10 +15,17 @@ public class Parcel
         this.Name = name;
     }
 
-    public BoringCustomType Boring { get; set; }
+    public BoringCustomType Boring { get; set; } = new();
     internal PrimitveDetails PrimitveDetails { get; set; } = new();
 
     public NoDefCtor? NoDefCtorProp { get; set; }
+
+    internal HashSet<int> HashSetProp { get; private set; } = new();
+    internal Stack<string> StackProp { get; private set; } = new();
+    internal ConcurrentStack<string> ConcStackProp { get; private set; } = new();
+
+    public Tuple<int, string, decimal, object?> TupleProp { get; set; } = new(0, string.Empty, 0.0m, null);
+    public ValueTuple<int, string, decimal, object?> ValueTupleProp { get; set; } = new(0, string.Empty, 0.0m, null);
 
     public Guid Id { get; set; }
 
@@ -30,4 +37,6 @@ public class Parcel
     public Dictionary<string, object> Metadata { get; } = [];
 
     public ConcurrentBag<string> Notes { get; } = new();
+
+    public ConcurrentDictionary<int, string> ConcDict { get; } = new();
 }

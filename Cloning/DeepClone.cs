@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -114,8 +115,17 @@ public class DeepClone<T> //where T : class
         // ConcurrentBag<T> (e.g. ConcurrentBag<string>)
         if (TryCloneConcurrentBag(type, source, visited, out var bagClone)) return bagClone;
 
+        // ConcurrentStack<T> (e.g. ConcurrentStack<string>)
+        if (TryCloneConcurrentStack(type, source, visited, out var concStackClone)) return concStackClone;
+
         // IDictionary (e.g. Dictionary<K,V>)
         if (TryCloneDictionary(type, source, visited, out var dictClone)) return dictClone;
+
+        // ConcurrentDictionary<K,V> (e.g. ConcurrentDictionary<int,string>)
+        if (TryCloneConcurrentDict(type, source, visited, out var concDictClone)) return concDictClone;
+
+        // Tuples
+        if (TryCloneTuple(type, source, visited, out var tupleClone)) return tupleClone;
 
         // Complex types
         if (TryCloneComplexObject(type, source, visited, out var objClone)) return objClone;
@@ -171,6 +181,27 @@ public class DeepClone<T> //where T : class
             }
 
             clone = localClone;
+            return true;
+        }
+
+        clone = null;
+        return false;
+    }
+
+    private bool TryCloneTuple(Type type, object? source, IDictionary<object, object> visited, out object? clone)
+    {
+        if (type.Name.StartsWith("Tuple"))
+        {
+            var tupleInfo = source as ITuple;
+            object[] parameters = new object[tupleInfo.Length];
+            for (var i = 0; i < tupleInfo.Length; i++)
+            {
+                parameters[i] = tupleInfo[i];
+            }
+
+            var tupleClone = Activator.CreateInstance(type, parameters);
+
+            clone = tupleClone;
             return true;
         }
 
@@ -266,6 +297,91 @@ public class DeepClone<T> //where T : class
             }
 
             clone = bagClone;
+            return true;
+        }
+
+        clone = null;
+        return false;
+    }
+
+    private bool TryCloneConcurrentStack(Type type, object? source, IDictionary<object, object> visited, out object? clone)
+    {
+        if (source == null)
+        {
+            clone = null;
+            return true;
+        }
+
+        if (type.IsGenericType &&
+           type.GetGenericTypeDefinition() == typeof(ConcurrentStack<>))
+        {
+            var concurrentStackType = typeof(ConcurrentStack<>).MakeGenericType(type.GenericTypeArguments.First());
+            var stackClone = (ICollection?)Activator.CreateInstance(concurrentStackType);
+
+            // Push an item to the ConcurrentStack
+            MethodInfo? addMethod = concurrentStackType.GetMethod("Push");
+
+            if (stackClone != null)
+            {
+                visited[source] = stackClone;
+            }
+
+            if (source is IEnumerable enumerable)
+            {
+                foreach (var item in enumerable)
+                {
+                    if (item != null)
+                    {
+                        addMethod?.Invoke(stackClone, [item]);
+                    }
+                }
+            }
+
+            clone = stackClone;
+            return true;
+        }
+
+        clone = null;
+        return false;
+    }
+
+    private bool TryCloneConcurrentDict(Type type, object? source, IDictionary<object, object> visited, out object? clone)
+    {
+        if (source == null)
+        {
+            clone = null;
+            return true;
+        }
+
+        if (type.IsGenericType &&
+           type.GetGenericTypeDefinition() == typeof(ConcurrentDictionary<,>))
+        {
+            var concurrentKeyType = typeof(ConcurrentDictionary<,>).MakeGenericType(type.GenericTypeArguments.First());
+            var concurrentValueType = typeof(ConcurrentDictionary<,>).MakeGenericType(type.GenericTypeArguments.Last());
+
+            var dictClone = Convert.ChangeType(Activator.CreateInstance(concurrentKeyType, concurrentValueType), type);
+
+            // Add an item to the ConcurrentBag
+            MethodInfo? addMethod = type.GetMethod("GetOrAdd");
+
+            if (dictClone != null)
+            {
+                visited[source] = dictClone;
+            }
+
+            if (source is IEnumerable enumerable)
+            {
+                foreach (var item in enumerable)
+                {
+                    if (item != null)
+                    {
+                        KeyValuePair<object, object> kvp = (KeyValuePair<object, object>)item;
+                        addMethod?.Invoke(dictClone, [kvp.Key, kvp.Value]);
+                    }
+                }
+            }
+
+            clone = dictClone;
             return true;
         }
 
