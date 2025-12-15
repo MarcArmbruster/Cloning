@@ -10,6 +10,12 @@ Therefore you should not use it in productive systems unless a stable version is
 
 Marc Armbruster, 14-Dec-2025
 
+## Version
+|Version|Date (code base) |Remarks|
+|---|---|---|
+|0.1.0| 15-Dec-2025 |initial version (based on .NET10) |
+
+
 ## Licence
 --> to be defined
 
@@ -39,6 +45,7 @@ var clone = DeepClone<Parcel>
                 .CreateClone();
 
 ```
+
 The Methods:
 - .Builder() --> provides a new builder instance [required]
 - .WithSourceInstance(...) --> sets the source instance to be cloned [required]
@@ -77,7 +84,7 @@ Here you can provide a Func<object?, object?> delegate that will be called durin
 ## Supported Types (Dec-2025)
 |Type|supported|
 |---|---|
-|Custom Objects (classes)|yes (depending on sub types - see below)|
+|Custom Objects (classes)| YES (depending on sub types - see below)|
 |bool|yes|
 |byte|yes|
 |sbyte|yes|
@@ -104,16 +111,16 @@ Here you can provide a Func<object?, object?> delegate that will be called durin
 |HashSet<>|yes|
 |Queue<>|planned|
 |Stack<>|yes|
-|LinkedList<>|planned|
+|LinkedList<>|yes|
 |Structs|yes|
 |Nullable<>|yes|
 |Tuple<>|yes|
 |ValueTuple<>|yes|
 |ConcurrentBag<>|yes|
 |ConcurrentDictionary<,>|yes|
-|ConcurrentQueue<>|partially|
-|ConcurrentStack<>|partially|
-|Immutable Collections|no|
+|ConcurrentQueue<>|planned|
+|ConcurrentStack<>|yes|
+|Immutable Collections|NO|
 
 <b>
 IMPORTANT: other types maybe supported but not tested yet!!

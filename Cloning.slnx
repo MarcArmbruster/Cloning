@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
   <Project Path="Cloning.Tests/Cloning.Tests.csproj" Id="870cd078-d3f8-4aac-92d0-e311e0bf92b0" />

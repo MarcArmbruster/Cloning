@@ -37,8 +37,8 @@ public sealed class CopyCreatorTests
             Value= 99.99m,
             Weight = 10
         };
-        parcel.Metadata.Add("Key1", "Value1");
-        parcel.Metadata.Add("Key2", "Value2");
+        parcel.DictProp.Add("Key1", "Value1");
+        parcel.DictProp.Add("Key2", "Value2");
 
         parcel.Children.Add(new Parcel("child1")
         {
@@ -52,13 +52,13 @@ public sealed class CopyCreatorTests
             Weight = 2
         });
 
-        parcel.Notes.Add("Note1");
-        parcel.Notes.Add("Note2");
-        parcel.Notes.Add("Note3");
+        parcel.ConcBagProp.Add("Note1");
+        parcel.ConcBagProp.Add("Note2");
+        parcel.ConcBagProp.Add("Note3");
 
-        parcel.ConcDict.TryAdd(1, "One");
-        parcel.ConcDict.TryAdd(2, "Two");
-        parcel.ConcDict.TryAdd(3, "Three");
+        parcel.ConcDictProp.TryAdd(1, "One");
+        parcel.ConcDictProp.TryAdd(2, "Two");
+        parcel.ConcDictProp.TryAdd(3, "Three");
 
         parcel.NoDefCtorProp = new NoDefCtor(4711, "FancyTestString");
 
@@ -100,13 +100,16 @@ public sealed class CopyCreatorTests
         parcel.StackProp.Push("Second");
         parcel.StackProp.Push("Third");
 
+        parcel.LinkedListProp.AddFirst(10.1m);
+        parcel.LinkedListProp.AddLast(20.2m);
+
         parcel.ConcStackProp.Push("CFirst");
         parcel.ConcStackProp.Push("CSecond");
         parcel.ConcStackProp.Push("CThird");
 
-        parcel.ConcDict[1] = "A";
-        parcel.ConcDict[2] = "B";
-        parcel.ConcDict[3] = "C";
+        parcel.ConcDictProp[1] = "A";
+        parcel.ConcDictProp[2] = "B";
+        parcel.ConcDictProp[3] = "C";
 
         parcel.TupleProp = new Tuple<int, string, decimal, object?>(7, "TupleString", 1234.56m, "X");
         parcel.ValueTupleProp = new ValueTuple<int, string, decimal, object?>(7, "TupleString", 1234.56m, "X");
@@ -116,36 +119,42 @@ public sealed class CopyCreatorTests
 
     private static void CheckClone(Parcel parcel, Parcel? clone)
     {
+        // Root Level
         Assert.IsNotNull(clone);
         Assert.AreEqual(parcel.Id, clone.Id);
         Assert.AreEqual(parcel.Name, clone.Name);
         Assert.AreEqual(parcel.Weight, clone.Weight);
         Assert.AreEqual(99.99m, clone.Value);
         Assert.HasCount(parcel.Children.Count, clone.Children);
-        Assert.AreEqual("Value1", parcel.Metadata["Key1"]);
-        Assert.AreEqual("Value2", parcel.Metadata["Key2"]);
+        Assert.AreEqual("Value1", parcel.DictProp["Key1"]);
+        Assert.AreEqual("Value2", parcel.DictProp["Key2"]);
 
+        // List (Hierarchal Children)
         Assert.AreEqual(parcel.Children[0].Id, clone.Children[0].Id);
         Assert.AreEqual(parcel.Children[0].Name, clone.Children[0].Name);
         Assert.AreEqual(parcel.Children[0].Weight, clone.Children[0].Weight);
-
         Assert.AreEqual(parcel.Children[1].Id, clone.Children[1].Id);
         Assert.AreEqual(parcel.Children[1].Name, clone.Children[1].Name);
         Assert.AreEqual(parcel.Children[1].Weight, clone.Children[1].Weight);
 
-        Assert.HasCount(3, parcel.Notes);
-        CollectionAssert.AreEquivalent(parcel.Notes, clone.Notes);
+        // ConcurrentBag
+        Assert.HasCount(3, parcel.ConcBagProp);
+        CollectionAssert.AreEquivalent(parcel.ConcBagProp, clone.ConcBagProp);
 
-        Assert.HasCount(3, parcel.ConcDict);
-        CollectionAssert.AreEquivalent(parcel.ConcDict, clone.ConcDict);
+        // ConcurrentDictionary
+        Assert.HasCount(3, parcel.ConcDictProp);
+        CollectionAssert.AreEquivalent(parcel.ConcDictProp, clone.ConcDictProp);
 
+        // NoDefCtor
         Assert.AreEqual(parcel.NoDefCtorProp?.Count, clone.NoDefCtorProp?.Count);
         Assert.AreEqual(parcel.NoDefCtorProp?.Text, clone.NoDefCtorProp?.Text);
 
+        // BoringCustomType
         Assert.IsFalse(object.ReferenceEquals(parcel.Boring, clone.Boring));
         Assert.AreNotEqual(parcel.Boring.ID, clone.Boring.ID); // ID is regenerated in custom clone logic
         Assert.AreEqual(parcel.Boring.Name, clone.Boring.Name);
 
+        // PrimitveDetails
         Assert.IsFalse(object.ReferenceEquals(parcel.PrimitveDetails, clone.PrimitveDetails));
         Assert.AreEqual(parcel.PrimitveDetails.BoolValue, clone.PrimitveDetails.BoolValue);
         Assert.AreEqual(parcel.PrimitveDetails.ByteValue, clone.PrimitveDetails.ByteValue);
@@ -167,28 +176,39 @@ public sealed class CopyCreatorTests
         Assert.AreEqual(parcel.PrimitveDetails.TimeSpanValue, clone.PrimitveDetails.TimeSpanValue);
         Assert.AreEqual(parcel.PrimitveDetails.Supported, clone.PrimitveDetails.Supported);
 
+        // HashSet
         Assert.IsFalse(object.ReferenceEquals(parcel.HashSetProp, clone.HashSetProp));
         Assert.HasCount(parcel.HashSetProp.Count, clone.HashSetProp);
         CollectionAssert.AreEquivalent(parcel.HashSetProp.ToArray(), clone.HashSetProp.ToArray());
 
+        // Stack
         Assert.IsFalse(object.ReferenceEquals(parcel.StackProp, clone.StackProp));
         Assert.HasCount(parcel.StackProp.Count, clone.StackProp);
         CollectionAssert.AreEquivalent(parcel.StackProp.ToArray(), clone.StackProp.ToArray());
 
+        // LinkedList
+        Assert.IsFalse(object.ReferenceEquals(parcel.LinkedListProp, clone.LinkedListProp));
+        Assert.HasCount(parcel.LinkedListProp.Count, clone.LinkedListProp);
+        CollectionAssert.AreEquivalent(parcel.LinkedListProp.ToArray(), clone.LinkedListProp.ToArray());
+
+        // ConcurrentStack
         Assert.IsFalse(object.ReferenceEquals(parcel.ConcStackProp, clone.ConcStackProp));
         Assert.HasCount(parcel.ConcStackProp.Count, clone.ConcStackProp);
         CollectionAssert.AreEquivalent(parcel.ConcStackProp.ToArray(), clone.ConcStackProp.ToArray());
 
-        Assert.IsFalse(object.ReferenceEquals(parcel.ConcDict, clone.ConcDict));
-        Assert.HasCount(parcel.ConcDict.Count, clone.ConcDict);
-        CollectionAssert.AreEquivalent(parcel.ConcDict.Values.ToArray(), clone.ConcDict.Values.ToArray());
+        // ConcurrentDictionary
+        Assert.IsFalse(object.ReferenceEquals(parcel.ConcDictProp, clone.ConcDictProp));
+        Assert.HasCount(parcel.ConcDictProp.Count, clone.ConcDictProp);
+        CollectionAssert.AreEquivalent(parcel.ConcDictProp.Values.ToArray(), clone.ConcDictProp.Values.ToArray());
 
+        // Tuple
         Assert.IsFalse(object.ReferenceEquals(parcel.TupleProp, clone.TupleProp));
         Assert.AreEqual(parcel.TupleProp.Item1, clone.TupleProp.Item1);
         Assert.AreEqual(parcel.TupleProp.Item2, clone.TupleProp.Item2);
         Assert.AreEqual(parcel.TupleProp.Item3, clone.TupleProp.Item3);
         Assert.AreEqual(parcel.TupleProp.Item4, clone.TupleProp.Item4);
 
+        // ValueTuple
         Assert.AreEqual(parcel.ValueTupleProp.Item1, clone.ValueTupleProp.Item1);
         Assert.AreEqual(parcel.ValueTupleProp.Item2, clone.ValueTupleProp.Item2);
         Assert.AreEqual(parcel.ValueTupleProp.Item3, clone.ValueTupleProp.Item3);

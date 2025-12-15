@@ -23,7 +23,7 @@ public class Parcel
     internal HashSet<int> HashSetProp { get; private set; } = new();
     internal Stack<string> StackProp { get; private set; } = new();
     internal ConcurrentStack<string> ConcStackProp { get; private set; } = new();
-
+    public LinkedList<decimal> LinkedListProp { get; } = new();
     public Tuple<int, string, decimal, object?> TupleProp { get; set; } = new(0, string.Empty, 0.0m, null);
     public ValueTuple<int, string, decimal, object?> ValueTupleProp { get; set; } = new(0, string.Empty, 0.0m, null);
 
@@ -34,9 +34,9 @@ public class Parcel
     internal decimal Value { get; set; }
 
     public List<Parcel> Children { get; } = [];
-    public Dictionary<string, object> Metadata { get; } = [];
+    public Dictionary<string, object> DictProp { get; } = [];
 
-    public ConcurrentBag<string> Notes { get; } = new();
+    public ConcurrentBag<string> ConcBagProp { get; } = new();
 
-    public ConcurrentDictionary<int, string> ConcDict { get; } = new();
+    public ConcurrentDictionary<int, string> ConcDictProp { get; } = new();
 }

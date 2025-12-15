@@ -4,6 +4,49 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	<ContinuosIntegrationBuild>true</ContinuosIntegrationBuild>
+    <AssemblyTitle>DeepCloning</AssemblyTitle>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <SignAssembly>False</SignAssembly>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>DeepCloning</PackageId>
+    <Title>DeepCloning</Title>
+    <Version>0.1.0</Version>
+    <Authors>Marc Armbruster</Authors>
+    <Company>Marc Armbruster</Company>
+    <Product>DeepCloning</Product>
+    <Description>This package provides efficient functions for deep cloning without external dependencies or time-consuming serialization processes.</Description>
+    <Copyright>Marc Armbruster</Copyright>
+    <PackageProjectUrl>https://github.com/MarcArmbruster/Cloning</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/MarcArmbruster/Cloning</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Deep Clone; Cloning; Performance</PackageTags>
+    <PackageReleaseNotes>inital version</PackageReleaseNotes>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <IncludeSymbols>True</IncludeSymbols>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+	<GenerateSBOM>true</GenerateSBOM>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>1</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>1</WarningLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
