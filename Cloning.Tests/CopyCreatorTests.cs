@@ -1,10 +1,32 @@
 ﻿namespace Cloning.Tests;
 
-using DeepCloneUtility.Cloning;
+using Cloning;
 
 [TestClass]
 public sealed class CopyCreatorTests
 {
+    [TestMethod]
+    public void EasyCloneTest()
+    {
+        Person person = new() { Name = "John", Age = 30 };
+        Person clone = DeepClone.CreateEasyDeepClone(person)!;
+
+        Assert.IsFalse(object.ReferenceEquals(person, clone));
+        Assert.AreEqual(person.Name, clone.Name);
+        Assert.AreEqual(person.Age, clone.Age);
+    }
+
+    [TestMethod]
+    public void EasyCloneNullPropertiesTest()
+    {
+        Person person = new() { Name = null, Age = null };
+        Person clone = DeepClone.CreateEasyDeepClone(person)!;
+
+        Assert.IsFalse(object.ReferenceEquals(person, clone));
+        Assert.AreEqual(person.Name, clone.Name);
+        Assert.AreEqual(person.Age, clone.Age);
+    }
+
     [TestMethod]
     public void PropertyBasedCloneTest()
     {
@@ -14,7 +36,7 @@ public sealed class CopyCreatorTests
         // Act
         var clone = DeepClone<Parcel>
                         .Builder()
-                        .WithSourceInstance(parcel)
+                        .UseSourceInstance(parcel)
                         .UseCtorParameters(typeof(NoDefCtor), [1,"test"])
                         .UseCustomLogic(
                             typeof(BoringCustomType), 
@@ -23,7 +45,8 @@ public sealed class CopyCreatorTests
                                 ID = Guid.NewGuid(),
                                 Name = ((BoringCustomType?)source)?.Name ?? string.Empty
                             }))
-                        .CreateClone();
+                        .CreateClone()
+                        .Result;
 
         // Assert
         CheckClone(parcel, clone);
@@ -31,7 +54,7 @@ public sealed class CopyCreatorTests
 
     private static Parcel CreateTestObject()
     {
-        Parcel parcel = new Parcel("master")
+        Parcel parcel = new("master")
         {
             Id = Guid.NewGuid(),
             Value= 99.99m,

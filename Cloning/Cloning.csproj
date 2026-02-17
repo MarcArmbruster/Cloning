@@ -4,14 +4,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<ContinuosIntegrationBuild>true</ContinuosIntegrationBuild>
+	<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <AssemblyTitle>DeepCloning</AssemblyTitle>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <SignAssembly>False</SignAssembly>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>DeepCloning</PackageId>
     <Title>DeepCloning</Title>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>Marc Armbruster</Authors>
     <Company>Marc Armbruster</Company>
     <Product>DeepCloning</Product>

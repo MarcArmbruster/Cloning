@@ -20,7 +20,7 @@ public class Parcel
 
     public NoDefCtor? NoDefCtorProp { get; set; }
 
-    internal HashSet<int> HashSetProp { get; private set; } = new();
+    internal HashSet<int> HashSetProp { get; private set; } = [];
     internal Stack<string> StackProp { get; private set; } = new();
     internal ConcurrentStack<string> ConcStackProp { get; private set; } = new();
     public LinkedList<decimal> LinkedListProp { get; } = new();
@@ -36,7 +36,7 @@ public class Parcel
     public List<Parcel> Children { get; } = [];
     public Dictionary<string, object> DictProp { get; } = [];
 
-    public ConcurrentBag<string> ConcBagProp { get; } = new();
+    public ConcurrentBag<string> ConcBagProp { get; } = [];
 
     public ConcurrentDictionary<int, string> ConcDictProp { get; } = new();
 }

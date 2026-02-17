@@ -8,13 +8,13 @@ In addition it shall be based on .NET basic functionalities, only. Avoiding refe
 Development started in 2025 and is still ongoing!
 Therefore you should not use it in productive systems unless a stable version is published ;-)
 
-Marc Armbruster, 14-Dec-2025
+Marc Armbruster, 17-Feb-2026
 
 ## Version
 |Version|Date (code base) |Remarks|
 |---|---|---|
 |0.1.0| 15-Dec-2025 |initial version (based on .NET10) |
-
+|0.2.0| 17-Feb-2026 |DeepClone.CreateEasyDeepClone(...) added |
 
 ## Licence
 --> to be defined
@@ -27,32 +27,44 @@ The entire logic is based on reflection and expression trees to achieve high per
 
 ## Easy Usage
 
+For non-complex types, the cloning process is straightforward:
+
+Just call the static method CreateEasyDeepClone with the source instance as parameter:
+```C#
+
+Person clone = DeepClone.CreateEasyDeepClone(person);
+
+```
+
+For more complex types, the builder pattern can be used to provide additional information for the cloning process, e.g. constructor parameters for types without default constructor or custom logic for special types.
 ```C#
 
 // Example: cloning an object of a custom 'Parcel' type 
 // with a complex substructure
-var clone = DeepClone<Parcel>
-                .Builder()
-                .WithSourceInstance(parcel)
-                .UseCtorParameters(typeof(NoDefCtor), [1,"test"])
-                .UseCustomLogic(
-                    typeof(BoringCustomType), 
-                    new Func<object?, object?>((source) => new BoringCustomType
-                    {
-                        ID = Guid.NewGuid(),
-                        Name = ((BoringCustomType?)source)?.Name ?? string.Empty
-                    }))
-                .CreateClone();
+        var clone = DeepClone<Parcel>
+                        .Builder()
+                        .UseSourceInstance(parcel)
+                        .UseCtorParameters(typeof(NoDefCtor), [1,"test"])
+                        .UseCustomLogic(
+                            typeof(BoringCustomType), 
+                            new Func<object?, object?>((source) => new BoringCustomType
+                            {
+                                ID = Guid.NewGuid(),
+                                Name = ((BoringCustomType?)source)?.Name ?? string.Empty
+                            }))
+                        .CreateClone()
+                        .Result;
 
 ```
 
 The Methods:
 - .Builder() --> provides a new builder instance [required]
-- .WithSourceInstance(...) --> sets the source instance to be cloned [required]
+- .UseSourceInstance(...) --> sets the source instance to be cloned [required]
 - .UseCtorParameters(...) --> provides parameters for types without default constructor [optional]
 - .UseCustomLogic(...) --> provides custom logic for special types [optional]
-- .CreateClone() --> performs the deep clone and returns the cloned instance [required]
-
+- .CreateClone() --> performs the deep clone logic [required]
+- .Result --> Result property conating the cloned instance [required]
+- 
 ## Challenges/Features
 To create a deep clone of complex types, several challenges need to be addressed:
 - Avoid circular references [included]
@@ -81,7 +93,7 @@ If you like to use special/custom handling during the cloning process for define
 .UseCustomLogic(...) on the builder instance.
 Here you can provide a Func<object?, object?> delegate that will be called during the cloning process for the defined type.
 
-## Supported Types (Dec-2025)
+## Supported Types (Feb-2026)
 |Type|supported|
 |---|---|
 |Custom Objects (classes)| YES (depending on sub types - see below)|

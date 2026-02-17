@@ -1,6 +1,6 @@
 ﻿namespace Cloning;
 
-internal class SubResult
+internal sealed class SubResult
 {
     public SubResult(bool isCloned, object? clone)
     {

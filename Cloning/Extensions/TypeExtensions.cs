@@ -16,11 +16,11 @@
         internal static ParameterInfo[] GetConstructorParameterTypes(this Type type)
         {
             ConstructorInfo[] ctors = type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-            var ctor = ctors.FirstOrDefault(c => c.GetParameters().Count() > 0);
+            var ctor = ctors.FirstOrDefault(c => c.GetParameters().Length > 0);
 
             if (ctor == null)
             {
-                return Array.Empty<ParameterInfo>();
+                return [];
             }
 
             return ctor.GetParameters();
