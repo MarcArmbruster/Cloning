@@ -27,15 +27,18 @@ The entire logic is based on reflection and expression trees to achieve high per
 
 ## Easy Usage
 
+### A) Easy Cloning Situations
 For non-complex types, the cloning process is straightforward:
 
 Just call the static method CreateEasyDeepClone with the source instance as parameter:
 ```C#
 
-Person clone = DeepClone.CreateEasyDeepClone(person);
+Person origPerson = new Person("Marc", 99)
+Person clone = DeepClone.CreateEasyDeepClone(origPerson);
 
 ```
 
+### B) Complex Cloning Situations
 For more complex types, the builder pattern can be used to provide additional information for the cloning process, e.g. constructor parameters for types without default constructor or custom logic for special types.
 ```C#
 

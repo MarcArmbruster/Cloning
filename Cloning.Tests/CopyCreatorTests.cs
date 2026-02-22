@@ -8,7 +8,7 @@ public sealed class CopyCreatorTests
     [TestMethod]
     public void EasyCloneTest()
     {
-        Person person = new() { Name = "John", Age = 30 };
+        Person person = new("John", 30);
         Person clone = DeepClone.CreateEasyDeepClone(person)!;
 
         Assert.IsFalse(object.ReferenceEquals(person, clone));
@@ -19,7 +19,7 @@ public sealed class CopyCreatorTests
     [TestMethod]
     public void EasyCloneNullPropertiesTest()
     {
-        Person person = new() { Name = null, Age = null };
+        Person person = new(null, null);
         Person clone = DeepClone.CreateEasyDeepClone(person)!;
 
         Assert.IsFalse(object.ReferenceEquals(person, clone));

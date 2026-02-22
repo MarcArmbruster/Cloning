@@ -2,7 +2,17 @@
 
 internal class Person
 {
-    internal string? Name { get; set; } = string.Empty;
+    public Person()
+    {
+    }
 
-    internal int? Age { get; set; }
+    public Person(string? name, int? age)
+    {
+        Name = name;
+        Age = age;
+    }
+
+    internal string? Name { get; init; }
+
+    internal int? Age { get; init; }
 }
