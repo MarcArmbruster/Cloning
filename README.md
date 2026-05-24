@@ -124,7 +124,7 @@ Here you can provide a Func<object?, object?> delegate that will be called durin
 |List<>|yes|
 |Dictionary<,>|yes|
 |HashSet<>|yes|
-|Queue<>|planned|
+|Queue<>|NOT planned: queues are dynamic data elements|
 |Stack<>|yes|
 |LinkedList<>|yes|
 |Structs|yes|
@@ -133,7 +133,7 @@ Here you can provide a Func<object?, object?> delegate that will be called durin
 |ValueTuple<>|yes|
 |ConcurrentBag<>|yes|
 |ConcurrentDictionary<,>|yes|
-|ConcurrentQueue<>|planned|
+|ConcurrentQueue<>|NOT planned: queues are dynamic data elements|
 |ConcurrentStack<>|yes|
 |Immutable Collections|NO|
 

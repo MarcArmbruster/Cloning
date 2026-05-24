@@ -137,6 +137,8 @@ public sealed class CopyCreatorTests
         parcel.TupleProp = new Tuple<int, string, decimal, object?>(7, "TupleString", 1234.56m, "X");
         parcel.ValueTupleProp = new ValueTuple<int, string, decimal, object?>(7, "TupleString", 1234.56m, "X");
         
+        parcel.FakeImageData = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }; // Simulated JPEG header bytes
+
         return parcel;
     }
 
@@ -236,5 +238,16 @@ public sealed class CopyCreatorTests
         Assert.AreEqual(parcel.ValueTupleProp.Item2, clone.ValueTupleProp.Item2);
         Assert.AreEqual(parcel.ValueTupleProp.Item3, clone.ValueTupleProp.Item3);
         Assert.AreEqual(parcel.ValueTupleProp.Item4, clone.ValueTupleProp.Item4);
+
+        // Byte-Array
+        Assert.IsNotNull(parcel.FakeImageData);
+        Assert.IsNotNull(clone.FakeImageData);
+        Assert.AreNotSame(parcel.FakeImageData, clone.FakeImageData);
+        Assert.HasCount(4, parcel.FakeImageData);
+        Assert.HasCount(parcel.FakeImageData.Length, clone.FakeImageData);
+        Assert.AreEqual(parcel.FakeImageData[0], clone.FakeImageData[0]);
+        Assert.AreEqual(parcel.FakeImageData[1], clone.FakeImageData[1]);
+        Assert.AreEqual(parcel.FakeImageData[2], clone.FakeImageData[2]);
+        Assert.AreEqual(parcel.FakeImageData[3], clone.FakeImageData[3]);
     }
 }

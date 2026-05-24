@@ -18,6 +18,8 @@ public class Parcel
     public BoringCustomType Boring { get; set; } = new();
     internal PrimitveDetails PrimitveDetails { get; set; } = new();
 
+    public byte[]FakeImageData { get; set; } = Array.Empty<byte>();
+
     public NoDefCtor? NoDefCtorProp { get; set; }
 
     internal HashSet<int> HashSetProp { get; private set; } = [];
