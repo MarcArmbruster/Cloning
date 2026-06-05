@@ -1,7 +1,7 @@
 # Deep Cloning Of Complex Types
 
 Based on several approaches in multiple projects over many years, the deep cloning of complex types is still a big challange.
-This library is an attempt to provide a high-performance solution for deep cloning in C# using all the learnings over the year.
+This library is an attempt to provide a high-performance solution for deep cloning in C# using all the learnings over the years.
 It is focused on functionality and performance.
 In addition it shall be based on .NET basic functionalities, only. Avoiding references of any external libraries.
 
