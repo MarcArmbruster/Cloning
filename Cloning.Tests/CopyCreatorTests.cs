@@ -87,7 +87,7 @@ public sealed class CopyCreatorTests
 
         parcel.Boring = new BoringCustomType
         {
-            ID = Guid.NewGuid(),
+            ID = Guid.CreateVersion7(),
             Name = "BoringName"
         };
 

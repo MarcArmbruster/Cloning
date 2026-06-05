@@ -52,7 +52,7 @@ For more complex types, the builder pattern can be used to provide additional in
                             typeof(BoringCustomType), 
                             new Func<object?, object?>((source) => new BoringCustomType
                             {
-                                ID = Guid.NewGuid(),
+                                ID = Guid.CreateVersion7(),
                                 Name = ((BoringCustomType?)source)?.Name ?? string.Empty
                             }))
                         .CreateClone()
